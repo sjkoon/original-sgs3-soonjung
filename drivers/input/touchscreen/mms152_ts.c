@@ -170,7 +170,7 @@ int touch_is_pressed;
 
 /* 5.55" OCTA LCD */
 #define FW_VERSION_L 0x29
-#define FW_VERSION_M 0x26
+#define FW_VERSION_M 0x50
 #define MAX_FW_PATH 255
 #define TSP_FW_FILENAME "melfas_fw.bin"
 
@@ -799,12 +799,19 @@ static void melfas_lcd_cb(struct tsp_lcd_callbacks *cb, bool en)
 	struct mms_ts_info *info =
 			container_of(cb, struct mms_ts_info, lcd_callback);
 
+	if (info->enabled == false) {
+		dev_err(&info->client->dev,
+			"[TSP] do not excute %s.(touch off)\n", __func__);
+		return;
+	}
+
 	if (info->fw_ic_ver < 0x21) {
 		dev_err(&info->client->dev,
 			"[TSP] Do not support firmware LCD framerate changing(ver = 0x%x)\n",
 			info->fw_ic_ver);
 		return;
 	}
+
 	if (en) {
 		if (info->tsp_lcdfreq_flag == 0) {
 			info->tsp_lcdfreq_flag = 1;
@@ -3905,6 +3912,7 @@ static int __devinit mms_ts_probe(struct i2c_client *client,
 				ret);
 			goto err_config;
 		}
+		info->fw_core_ver = get_fw_version(info, SEC_CORE);
 	}
 
 	if (info->ldi == 'L') {
@@ -3917,6 +3925,23 @@ static int __devinit mms_ts_probe(struct i2c_client *client,
 				dev_err(&client->dev,
 					"failed to initialize (%d)\n", ret);
 				goto err_config;
+			}
+			info->fw_core_ver = get_fw_version(info, SEC_CORE);
+		}
+		info->panel = get_panel_version(info);
+		if (info->panel != 'M') {
+			if (info->fw_core_ver == 0x53) {
+				dev_err(&client->dev, "cannot read panel info\n");
+				dev_err(&client->dev, "excute core firmware update\n");
+				ret = mms_ts_fw_load(info, true, 'L');
+			} else {
+				dev_err(&client->dev, "excute core firmware update\n");
+				ret = mms_ts_core_fw_load(info);
+			}
+			if (ret) {
+				dev_err(&client->dev,
+					"failed to initialize (%d)\n",
+					ret);
 			}
 		}
 		info->fw_ic_ver = get_fw_version(info, SEC_CONFIG);
@@ -3965,6 +3990,8 @@ static int __devinit mms_ts_probe(struct i2c_client *client,
 						ret);
 					goto err_config;
 				}
+				info->fw_core_ver =
+					get_fw_version(info, SEC_CORE);
 			}
 			info->fw_ic_ver = get_fw_version(info, SEC_CONFIG);
 			if ((info->fw_ic_ver < FW_VERSION_M) &&
@@ -3989,12 +4016,11 @@ static int __devinit mms_ts_probe(struct i2c_client *client,
 		} else {
 			dev_err(&client->dev, "cannot read panel info\n");
 			info->fw_ic_ver = get_fw_version(info, SEC_CONFIG);
-			if ((info->fw_core_ver == 0x53) &&
-				(info->fw_ic_ver == 0xff)) {
+			if (info->fw_core_ver == 0x53) {
 				dev_err(&client->dev, "firmware update\n");
 				dev_err(&client->dev, "ic:0x%x, bin:0x%x\n",
 					info->fw_ic_ver, FW_VERSION_M);
-				ret = mms_ts_fw_load(info, false, 'N');
+				ret = mms_ts_fw_load(info, true, 'N');
 			} else {
 				dev_err(&client->dev, "excute core firmware update\n");
 				ret = mms_ts_core_fw_load(info);
