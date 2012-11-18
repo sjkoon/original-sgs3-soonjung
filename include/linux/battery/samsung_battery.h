@@ -183,8 +183,7 @@ struct battery_info {
 	unsigned int prev_battery_soc;
 	struct wake_lock update_wake_lock;
 
-#if defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_M0_CTC)\
-	|| defined(CONFIG_MACH_T0_CHN_CTC)
+#if defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_M0_CTC)
 	bool is_unspec_phase;
 	bool is_unspec_recovery;
 #endif
@@ -282,8 +281,7 @@ enum status_full_type {
 #define DOCK_TYPE_LOW_CURR		475
 
 /* voltage diff for recharge voltage calculation */
-#if defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_M0_CTC)\
-	|| defined(CONFIG_MACH_T0_CHN_CTC)
+#if defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_M0_CTC)
 /* KOR model spec : max-voltage minus 60mV */
 #define RECHG_DROP_VALUE	60000
 #else
@@ -328,7 +326,6 @@ enum {
 	VF_DET_ADC = 0,
 	VF_DET_CHARGER,
 	VF_DET_GPIO,
-	VF_DET_ADC_GPIO,
 
 	VF_DET_UNKNOWN,
 };

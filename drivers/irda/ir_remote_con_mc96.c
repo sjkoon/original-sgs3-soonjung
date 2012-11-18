@@ -66,14 +66,13 @@ static int irda_fw_update(struct ir_remocon_data *ir_data)
 {
 	struct ir_remocon_data *data = ir_data;
 	struct i2c_client *client = data->client;
-	int i, k, ret, checksum;
+	int i, ret;
 	u8 buf_ir_test[8];
 
 	data->pdata->ir_vdd_onoff(0);
 	data->pdata->ir_wake_en(0);
-	data->pdata->ir_vdd_onoff(1);
-	msleep(50);
 	data->pdata->ir_wake_en(1);
+	data->pdata->ir_vdd_onoff(1);
 	msleep(100);
 
 	ret = i2c_master_recv(client, buf_ir_test, MC96_READ_LENGTH);
@@ -89,7 +88,6 @@ static int irda_fw_update(struct ir_remocon_data *ir_data)
 						__func__, ret, FW_VERSION);
 		data->pdata->ir_vdd_onoff(0);
 		data->pdata->ir_wake_en(0);
-		msleep(20);
 		data->pdata->ir_vdd_onoff(1);
 		msleep(100);
 
@@ -99,19 +97,11 @@ static int irda_fw_update(struct ir_remocon_data *ir_data)
 
 		ret = buf_ir_test[6] << 8 | buf_ir_test[7];
 
-		checksum = 0;
-
-		for (k = 0; k < 6; k++)
-			checksum += buf_ir_test[k];
-
-		if (ret == checksum)
+		if (ret == 0x01fe)
 			printk(KERN_INFO "4. %s: boot mode, FW download start\n",
 							__func__);
-		else {
-			printk(KERN_ERR "ABOV IC bootcode broken\n");
+		else
 			goto err_bootmode;
-		}
-
 		msleep(30);
 
 		for (i = 0; i < FRAME_COUNT; i++) {
@@ -135,21 +125,15 @@ static int irda_fw_update(struct ir_remocon_data *ir_data)
 
 		ret = buf_ir_test[6] << 8 | buf_ir_test[7];
 
-		checksum = 0;
-
-		for (k = 0; k < 6; k++)
-			checksum += buf_ir_test[k];
-
-		if (ret == checksum)
+		if (ret == 0x01ba)
 			printk(KERN_INFO "6. %s: boot down complete\n",
 				__func__);
 		else
 			goto err_bootmode;
 
 		data->pdata->ir_vdd_onoff(0);
-		data->pdata->ir_vdd_onoff(1);
-		msleep(50);
 		data->pdata->ir_wake_en(1);
+		data->pdata->ir_vdd_onoff(1);
 		msleep(60);
 		ret = i2c_master_recv(client, buf_ir_test, MC96_READ_LENGTH);
 
@@ -213,9 +197,8 @@ static int irda_read_device_info(struct ir_remocon_data *ir_data)
 	int ret;
 
 	printk(KERN_INFO"%s called\n", __func__);
-	data->pdata->ir_vdd_onoff(1);
-	msleep(50);
 	data->pdata->ir_wake_en(1);
+	data->pdata->ir_vdd_onoff(1);
 	msleep(60);
 	ret = i2c_master_recv(client, buf_ir_test, MC96_READ_LENGTH);
 
@@ -340,13 +323,11 @@ static ssize_t remocon_store(struct device *dev, struct device_attribute *attr,
 				data->ir_freq = _data;
 				if (data->on_off) {
 					data->pdata->ir_wake_en(0);
-					udelay(200);
 					data->pdata->ir_wake_en(1);
-					msleep(30);
+					msleep(20);
 				} else {
-					data->pdata->ir_vdd_onoff(1);
-					msleep(30);
 					data->pdata->ir_wake_en(1);
+					data->pdata->ir_vdd_onoff(1);
 					msleep(60);
 					data->on_off = 1;
 				}
@@ -399,9 +380,9 @@ static ssize_t remocon_ack(struct device *dev, struct device_attribute *attr,
 	printk(KERN_INFO "%s : ack_number = %d\n", __func__, ack_number);
 
 	if (ack_number == 6)
-		return sprintf(buf, "1\n");
+		return snprintf(buf, 1, "%d\n", 1);
 	else
-		return sprintf(buf, "0\n");
+		return snprintf(buf, 1, "%d\n", 0);
 }
 
 static DEVICE_ATTR(ir_send, 0664, remocon_show, remocon_store);

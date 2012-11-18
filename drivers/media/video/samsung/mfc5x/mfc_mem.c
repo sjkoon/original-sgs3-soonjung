@@ -559,8 +559,8 @@ int mfc_init_mem_mgr(struct mfc_dev *dev)
 	cma_infos[0].free_size   = 0x03100000;
 	cma_infos[0].count   = 1;
 #elif defined(CONFIG_MACH_GC1)
-	cma_infos[0].lower_bound = 0x50500000;
-	cma_infos[0].upper_bound = 0x53600000;
+	cma_infos[0].lower_bound = 0x50900000;
+	cma_infos[0].upper_bound = 0x53A00000;
 	cma_infos[0].total_size  = 0x03100000;
 	cma_infos[0].free_size   = 0x03100000;
 	cma_infos[0].count   = 1;
@@ -622,12 +622,19 @@ int mfc_init_mem_mgr(struct mfc_dev *dev)
 #ifdef CONFIG_USE_MFC_CMA
 #if defined(CONFIG_MACH_M0)
 	base[0] = 0x5c100000;
-#elif defined(CONFIG_MACH_GC1)
-	base[0] = 0x50500000;
-#endif
 	dev->mem_infos[0].base = base[0];
 	dev->mem_infos[0].size = size;
 	dev->mem_infos[0].addr = phys_to_virt(base[0]);
+#elif defined(CONFIG_MACH_GC1)
+	dev->mem_infos[0].addr = dma_alloc_coherent(dev->device,
+				MFC_FW_SYSTEM_SIZE, &base[0], 0);
+	if (IS_ERR_VALUE(base[0])) {
+		mfc_err("failed to get rsv, memory from CMA on mfc-secure");
+		return -ENOMEM;
+	}
+	dev->mem_infos[0].base = base[0];
+	dev->mem_infos[0].size = size;
+#endif
 	mfc_info("%s[%d]: base 0x%x, size 0x%x, addr 0x%x\n",
 			__func__, __LINE__, (int)base[0], (int)size,
 			(int)dev->mem_infos[0].addr);

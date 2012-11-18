@@ -61,7 +61,7 @@
 
 static int touchkey_keycode[] = { 0,
 #if defined(TK_USE_4KEY_TYPE_ATT)
-	KEY_MENU, KEY_HOMEPAGE, KEY_BACK, KEY_SEARCH,
+	KEY_MENU, KEY_ENTER, KEY_BACK, KEY_END,
 
 #elif defined(TK_USE_4KEY_TYPE_NA)
 	KEY_SEARCH, KEY_BACK, KEY_HOMEPAGE, KEY_MENU,
@@ -108,8 +108,8 @@ static bool g_debug_tkey = FALSE;
 
 static int touchkey_i2c_check(struct touchkey_i2c *tkey_i2c);
 
-static u16 menu_sensitivity;
-static u16 back_sensitivity;
+static u8 menu_sensitivity;
+static u8 back_sensitivity;
 #if defined(TK_USE_4KEY)
 static u8 home_sensitivity;
 static u8 search_sensitivity;
@@ -324,7 +324,7 @@ static ssize_t set_touchkey_autocal_testmode(struct device *dev,
 			tkey_i2c->pdata->power_on(1);
 			msleep(50);
 #if defined(TK_HAS_AUTOCAL)
-			touchkey_autocalibration(tkey_i2c);
+			touchkey_autocalibration();
 #endif
 		}
 	} else {
@@ -1226,12 +1226,8 @@ static ssize_t touchkey_menu_show(struct device *dev,
 
 	ret = i2c_touchkey_read(tkey_i2c->client, KEYCODE_REG, data, 14);
 
-	printk(KERN_DEBUG "called %s data[12] = %d, data[13] =%d\n", __func__,
-			data[12], data[13]);
-	menu_sensitivity = ((0x00FF & data[12]) << 8) | data[13];
-	printk(KERN_DEBUG "called %s menu_sensitivity =%d\n", __func__,
-			menu_sensitivity);
-
+	printk(KERN_DEBUG "called %s data[13] =%d\n", __func__, data[13]);
+	menu_sensitivity = data[13];
 #else
 	u8 data[10];
 	int ret;
@@ -1255,11 +1251,8 @@ static ssize_t touchkey_back_show(struct device *dev,
 
 	ret = i2c_touchkey_read(tkey_i2c->client, KEYCODE_REG, data, 14);
 
-	printk(KERN_DEBUG "called %s data[10] = %d, data[11] =%d\n", __func__,
-			data[10], data[11]);
-	back_sensitivity = ((0x00FF & data[10]) << 8) | data[11];
-	printk(KERN_DEBUG "called %s back_sensitivity =%d\n", __func__,
-			back_sensitivity);
+	printk(KERN_DEBUG "called %s data[11] =%d\n", __func__, data[11]);
+	back_sensitivity = data[11];
 #else
 	u8 data[10];
 	int ret;

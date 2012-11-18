@@ -45,7 +45,7 @@
 
 #define EXTERNAL_MODEM "external_modem"
 #define EHCI_REG_DUMP
-#define DEFAULT_RAW_WAKE_TIME (0*HZ)
+#define DEFAULT_RAW_WAKE_TIME (6*HZ)
 
 BLOCKING_NOTIFIER_HEAD(mdm_reset_notifier_list);
 
@@ -125,9 +125,6 @@ struct mdm_hsic_pm_data {
 
 /* indicate wakeup from lpa state */
 bool lpa_handling;
-
-/* indicate receive hallo_packet_rx */
-int hello_packet_rx;
 
 #ifdef EHCI_REG_DUMP
 struct dump_ehci_regs {
@@ -349,8 +346,6 @@ void request_autopm_lock(int status)
 			pm_runtime_allow(&pm_data->udev->dev);
 			pm_runtime_put(&pm_data->udev->dev);
 		}
-		/* initailize hello_packet_rx */
-		hello_packet_rx = 0;
 	}
 }
 
@@ -368,7 +363,6 @@ void request_active_lock_release(const char *name)
 	pr_info("%s\n", __func__);
 	if (pm_data)
 		wake_unlock(&pm_data->l2_wake);
-
 }
 
 void request_boot_lock_set(const char *name)
@@ -551,9 +545,6 @@ int register_udev_to_pm_dev(const char *name, struct usb_device *udev)
 		pm_data->udev = udev;
 		atomic_set(&pm_data->pmlock_cnt, 0);
 		usb_disable_autosuspend(udev);
-#ifdef CONFIG_SIM_DETECT
-		get_sim_state_at_boot();
-#endif
 	} else if (pm_data->udev && pm_data->udev != udev) {
 		pr_err("%s:udev mismatching: pm_data->udev(0x%p), udev(0x%p)\n",
 		__func__, pm_data->udev, udev);

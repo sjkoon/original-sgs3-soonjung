@@ -589,21 +589,9 @@ static int s5c73m3_get_sensor_fw_binary(struct v4l2_subdev *sd)
 	u32 crc_index = 0;
 	int retryCnt = 2;
 
-#if defined(CONFIG_MACH_T0)
+#if defined(CONFIG_MACH_T0) || defined(CONFIG_MACH_BAFFIN)
 	if (state->sensor_fw[1] == 'D') {
 		sprintf(fw_path, "/data/cfw/SlimISP_%cK.bin",
-			state->sensor_fw[0]);
-	} else {
-		sprintf(fw_path, "/data/cfw/SlimISP_%c%c.bin",
-			state->sensor_fw[0],
-			state->sensor_fw[1]);
-	}
-#elif defined(CONFIG_MACH_BAFFIN)
-	if (state->sensor_fw[1] == 'D') {
-		sprintf(fw_path, "/data/cfw/SlimISP_%cK.bin",
-			state->sensor_fw[0]);
-	} else if (state->sensor_fw[1] == 'H') {
-		sprintf(fw_path, "/data/cfw/SlimISP_%cM.bin",
 			state->sensor_fw[0]);
 	} else {
 		sprintf(fw_path, "/data/cfw/SlimISP_%c%c.bin",
@@ -967,21 +955,9 @@ static int s5c73m3_get_phone_fw_version(struct v4l2_subdev *sd)
 	int retVal = 0;
 	int fw_requested = 1;
 
-#if defined(CONFIG_MACH_T0)
+#if defined(CONFIG_MACH_T0) || defined(CONFIG_MACH_BAFFIN)
 	if (state->sensor_fw[1] == 'D') {
 		sprintf(fw_path, "SlimISP_%cK.bin",
-			state->sensor_fw[0]);
-	} else {
-		sprintf(fw_path, "SlimISP_%c%c.bin",
-			state->sensor_fw[0],
-			state->sensor_fw[1]);
-	}
-#elif defined(CONFIG_MACH_BAFFIN)
-	if (state->sensor_fw[1] == 'D') {
-		sprintf(fw_path, "SlimISP_%cK.bin",
-			state->sensor_fw[0]);
-	} else if (state->sensor_fw[1] == 'H') {
-		sprintf(fw_path, "SlimISP_%cM.bin",
 			state->sensor_fw[0]);
 	} else {
 		sprintf(fw_path, "SlimISP_%c%c.bin",
@@ -1225,13 +1201,8 @@ static int s5c73m3_check_fw_date(struct v4l2_subdev *sd)
 		phone_date,
 		strcmp((char *)&sensor_date, (char *)&phone_date));
 
-#if defined(CONFIG_MACH_T0)
+#if defined(CONFIG_MACH_T0) || defined(CONFIG_MACH_BAFFIN)
 	if (state->sensor_fw[1] == 'D')
-		return -1;
-	else
-		return strcmp((char *)&sensor_date, (char *)&phone_date);
-#elif defined(CONFIG_MACH_BAFFIN)
-	if (state->sensor_fw[1] == 'D' || state->sensor_fw[1] == 'H')
 		return -1;
 	else
 		return strcmp((char *)&sensor_date, (char *)&phone_date);
@@ -2699,21 +2670,9 @@ static int s5c73m3_load_fw(struct v4l2_subdev *sd)
 	mm_segment_t old_fs;
 	long fsize = 0, nread;
 
-#if defined(CONFIG_MACH_T0)
+#if defined(CONFIG_MACH_T0) || defined(CONFIG_MACH_BAFFIN)
 	if (state->sensor_fw[1] == 'D') {
 		sprintf(fw_path, "SlimISP_%cK.bin",
-			state->sensor_fw[0]);
-	} else {
-		sprintf(fw_path, "SlimISP_%c%c.bin",
-			state->sensor_fw[0],
-			state->sensor_fw[1]);
-	}
-#elif defined(CONFIG_MACH_BAFFIN)
-	if (state->sensor_fw[1] == 'D') {
-		sprintf(fw_path, "SlimISP_%cK.bin",
-			state->sensor_fw[0]);
-	} else if (state->sensor_fw[1] == 'H') {
-		sprintf(fw_path, "SlimISP_%cM.bin",
 			state->sensor_fw[0]);
 	} else {
 		sprintf(fw_path, "SlimISP_%c%c.bin",
@@ -3418,7 +3377,7 @@ static int s5c73m3_read_vdd_core(struct v4l2_subdev *sd)
 		vdd_core_val = 1150000;
 	} else if (read_val & 0x800) {
 		strcpy(sysfs_isp_core, "1.10V");
-#if defined(CONFIG_MACH_M3) || defined(CONFIG_MACH_M0_DUOSCTC)
+#ifdef CONFIG_MACH_M3
 		state->pdata->set_vdd_core(1150000);
 		vdd_core_val = 1150000;
 #else

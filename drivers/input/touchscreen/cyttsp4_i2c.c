@@ -31,6 +31,16 @@
 
 #include <linux/i2c.h>
 #include <linux/slab.h>
+#include <plat/gpio-cfg.h>
+#include <mach/gpio-midas.h>
+#include <linux/delay.h>
+
+/* key led */
+#include <linux/regulator/consumer.h>
+#define PRESS_KEY 1	/* Fixed value */
+#define RELEASE_KEY 0	/* Fixed value */
+static int led_status;
+extern struct class *sec_class;
 
 #define CY_I2C_DATA_SIZE  (3 * 256)
 
@@ -40,6 +50,40 @@ struct cyttsp4_i2c {
 	void *ttsp_client;
 	u8 wr_buf[CY_I2C_DATA_SIZE];
 };
+
+/* key led */
+static ssize_t touchkey_led_control(struct device *dev,
+		struct device_attribute *attr, const char *buf,
+		size_t size)
+{
+	if (buf && buf[0] == '1' && led_status == 0) {
+		pr_info("[TSP] %s : LED ON -LED buf is %d\n",
+			__func__, buf[0]);
+		s3c_gpio_cfgpin(GPIO_LED_VDD_EN, S3C_GPIO_OUTPUT);
+		s3c_gpio_setpull(GPIO_LED_VDD_EN, S3C_GPIO_PULL_NONE);
+		gpio_direction_output(GPIO_LED_VDD_EN, GPIO_LEVEL_HIGH);
+		mdelay(1);
+
+		s3c_gpio_cfgpin(GPIO_KEY_LED_CTRL, S3C_GPIO_OUTPUT);
+		s3c_gpio_setpull(GPIO_KEY_LED_CTRL, S3C_GPIO_PULL_NONE);
+		gpio_direction_output(GPIO_KEY_LED_CTRL, GPIO_LEVEL_HIGH);
+		led_status = 1;
+	} else if (buf && buf[0] == '2' && led_status == 1) {
+		pr_info("[TSP] %s : LED OFF -LED buf is %d\n",
+			__func__, buf[0]);
+		s3c_gpio_setpull(GPIO_KEY_LED_CTRL, S3C_GPIO_PULL_NONE);
+		gpio_direction_output(GPIO_KEY_LED_CTRL, GPIO_LEVEL_LOW);
+		mdelay(1);
+
+		s3c_gpio_setpull(GPIO_LED_VDD_EN, S3C_GPIO_PULL_NONE);
+		gpio_direction_output(GPIO_LED_VDD_EN, GPIO_LEVEL_LOW);
+		led_status = 0;
+	}
+
+	return size;
+}
+static DEVICE_ATTR(brightness, S_IRUGO | S_IWUSR | S_IWGRP, NULL,
+		touchkey_led_control);
 
 static s32 cyttsp4_i2c_read_block_data(void *handle, u16 subaddr,
 	size_t length, void *values, int i2c_addr, bool use_subaddr)
@@ -95,6 +139,8 @@ static int __devinit cyttsp4_i2c_probe(struct i2c_client *client,
 {
 	struct cyttsp4_i2c *ts;
 	int retval = 0;
+	/* key led */
+	struct device *sec_touchkey;
 
 	pr_info("%s: Starting %s probe...\n", __func__, CY_I2C_NAME);
 
@@ -134,6 +180,14 @@ static int __devinit cyttsp4_i2c_probe(struct i2c_client *client,
 	dev_info(ts->ops.dev,
 			"%s: Registration complete\n", __func__);
 
+	led_status = 0;
+	sec_touchkey = device_create(sec_class, NULL, 0, NULL, "sec_touchkey");
+	if (device_create_file(sec_touchkey,
+				&dev_attr_brightness) < 0) {
+		pr_err("Failed to create device file(%s)!\n",
+				dev_attr_brightness.attr.name);
+	}
+
 	return 0;
 
 cyttsp4_i2c_probe_exit:
@@ -144,11 +198,13 @@ cyttsp4_i2c_probe_exit:
 /* registered in driver struct */
 static int __devexit cyttsp4_i2c_remove(struct i2c_client *client)
 {
+	struct regulator *vreg_led = NULL;
 	struct cyttsp4_i2c *ts;
 
 	ts = i2c_get_clientdata(client);
 	cyttsp4_core_release(ts->ttsp_client);
 	kfree(ts);
+	regulator_put(vreg_led);
 	return 0;
 }
 

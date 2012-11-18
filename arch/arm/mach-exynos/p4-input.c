@@ -678,7 +678,6 @@ static int wacom_resume_hw(void);
 static int wacom_early_suspend_hw(void);
 static int wacom_late_resume_hw(void);
 static int wacom_reset_hw(void);
-static void wacom_compulsory_flash_mode(bool en);
 static void wacom_register_callbacks(struct wacom_g5_callbacks *cb);
 
 static struct wacom_g5_platform_data wacom_platform_data = {
@@ -690,7 +689,7 @@ static struct wacom_g5_platform_data wacom_platform_data = {
 	.gpio_pen_insert = GPIO_S_PEN_IRQ,
 #endif
 #ifdef WACOM_HAVE_FWE_PIN
-	.compulsory_flash_mode = wacom_compulsory_flash_mode,
+	.gpio_fwe = GPIO_PEN_FWE0,
 #endif
 	.init_platform_hw = wacom_init_hw,
 	.suspend_platform_hw = wacom_suspend_hw,
@@ -761,14 +760,6 @@ static int wacom_init_hw(void)
 
 	return 0;
 }
-
-#ifdef WACOM_HAVE_FWE_PIN
-static void wacom_compulsory_flash_mode(bool en)
-{
-	gpio_set_value(GPIO_PEN_FWE0, en);
-}
-
-#endif
 
 static int wacom_suspend_hw(void)
 {

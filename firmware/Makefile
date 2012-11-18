@@ -31,13 +31,9 @@ ifdef CONFIG_MACH_T0
 fw-shipped-$(CONFIG_VIDEO_S5C73M3) += SlimISP_ZK.bin \
 				      SlimISP_GK.bin
 else
-ifdef CONFIG_MACH_M3_TMO
+ifdef CONFIG_MACH_BAFFIN
 fw-shipped-$(CONFIG_VIDEO_S5C73M3) += SlimISP_ZK.bin \
 				      SlimISP_GK.bin
-else
-ifdef CONFIG_MACH_BAFFIN
-fw-shipped-$(CONFIG_VIDEO_S5C73M3) += SlimISP_GK.bin \
-				      SlimISP_GM.bin
 else
 ifdef CONFIG_MACH_GRANDE
 fw-shipped-$(CONFIG_VIDEO_S5C73M3) += SlimISP_GJ.bin
@@ -47,7 +43,6 @@ fw-shipped-$(CONFIG_VIDEO_S5C73M3) += SlimISP_GJ.bin
 else
 fw-shipped-$(CONFIG_VIDEO_S5C73M3) += SlimISP_ZD.bin \
 				      SlimISP_GD.bin
-endif
 endif
 endif
 endif
@@ -172,8 +167,7 @@ fw-shipped-$(CONFIG_EPEN_WACOM_G5SP) += epen/W8501.bin epen/W8501_P48.bin
 fw-shipped-$(CONFIG_EPEN_WACOM_G9PM) += epen/W9001_B746.bin epen/W9001_B713.bin epen/W9001_B660.bin \
 			epen/W9001_B746S.bin epen/W9001_B746L.bin \
 			epen/W9001_B746JD.bin \
-			epen/W9001_B746VZW.bin \
-			epen/W9001_0700.bin
+			epen/W9001_B746VZW.bin
 
 #for sensorhub
 fw-shipped-$(CONFIG_SENSORS_SSP) += ssp.fw

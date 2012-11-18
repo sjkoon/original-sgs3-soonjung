@@ -626,16 +626,11 @@ static inline void fimc_irq_cap(struct fimc_control *ctrl)
 		}
 
 		fimc_add_outgoing_queue(ctrl, buf_index);
-		spin_lock(&ctrl->inq_lock);
-
 		fimc_hwset_output_buf_sequence(ctrl, buf_index,
 				FIMC_FRAMECNT_SEQ_DISABLE);
 
 		framecnt_seq = fimc_hwget_output_buf_sequence(ctrl);
 		available_bufnum = fimc_hwget_number_of_bits(framecnt_seq);
-
-		spin_unlock(&ctrl->inq_lock);
-
 		fimc_info2("%s[%d] : framecnt_seq: %d, available_bufnum: %d\n",
 			__func__, ctrl->id, framecnt_seq, available_bufnum);
 		if (ctrl->status != FIMC_BUFFER_STOP) {
@@ -782,8 +777,6 @@ static struct fimc_control *fimc_register_controller(struct platform_device *pde
 	mutex_init(&ctrl->lock);
 	mutex_init(&ctrl->v4l2_lock);
 	spin_lock_init(&ctrl->outq_lock);
-	spin_lock_init(&ctrl->inq_lock);
-
 	init_waitqueue_head(&ctrl->wq);
 
 	/* get resource for io memory */
@@ -1166,7 +1159,7 @@ static int _fill_v4l2_buffer(struct vb2_buffer *vb, struct v4l2_buffer *b,
 		b->m.fd = vb->v4l2_planes[0].m.fd;
 	}
 
-	return 0;
+	return ret;
 }
 
 static int _fill_vb2_buffer(struct vb2_buffer *vb, struct v4l2_buffer *b,

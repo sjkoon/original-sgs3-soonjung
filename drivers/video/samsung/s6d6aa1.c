@@ -75,12 +75,6 @@ static const unsigned char SEQ_PASSWD2[] = {
 	0x5A, 0x5A
 };
 
-static const unsigned char SEQ_PANELCTL[] = {
-	0xF6,
-	0x0B, 0x11, 0x0F, 0x25, 0x0A, 0x00, 0x13, 0x22, 0x1B, 0x03,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x1B, 0x0D, 0x3F, 0x3C, 0x51,
-};
-
 static const unsigned char SEQ_SONY_IP_SET1[] = {
 	0xC4,
 	0x7C, 0xE6, 0x7C, 0xE6, 0x7C, 0xE6, 0x7C, 0x7C,
@@ -356,15 +350,14 @@ static int s6d6aa1_ldi_init(struct lcd_info *lcd)
 {
 	int ret = 0;
 
-	usleep_range(15000, 15000);
+	msleep(15);
 
 	s6d6aa1_write(lcd, SEQ_SLPOUT, ARRAY_SIZE(SEQ_SLPOUT));
 
-	usleep_range(145000, 145000);
+	msleep(145);
 
 	s6d6aa1_write(lcd, SEQ_PASSWD1, ARRAY_SIZE(SEQ_PASSWD1));
 	s6d6aa1_write(lcd, SEQ_PASSWD2, ARRAY_SIZE(SEQ_PASSWD2));
-	s6d6aa1_write(lcd, SEQ_PANELCTL, ARRAY_SIZE(SEQ_PANELCTL));
 	s6d6aa1_write(lcd, SEQ_SONY_IP_SET1, ARRAY_SIZE(SEQ_SONY_IP_SET1));
 	s6d6aa1_write(lcd, SEQ_SONY_IP_SET2, ARRAY_SIZE(SEQ_SONY_IP_SET2));
 	s6d6aa1_write(lcd, SEQ_PGAMMACTL, ARRAY_SIZE(SEQ_PGAMMACTL));

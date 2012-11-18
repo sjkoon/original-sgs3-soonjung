@@ -3136,16 +3136,17 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 	int available_bufnum;
 	size_t length = 0;
 	int i;
-	unsigned long spin_flags;
 
 	if (!cap || !ctrl->cam) {
 		fimc_err("%s: No capture device.\n", __func__);
 		return -ENODEV;
 	}
 
+	mutex_lock(&ctrl->v4l2_lock);
 	if (pdata->hw_ver >= 0x51) {
 		if (cap->bufs[idx].state != VIDEOBUF_IDLE) {
 			fimc_err("%s: invalid state idx : %d\n", __func__, idx);
+			mutex_unlock(&ctrl->v4l2_lock);
 			return -EINVAL;
 		} else {
 			if (b->memory == V4L2_MEMORY_USERPTR) {
@@ -3167,6 +3168,7 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 				if (ret < 0) {
 					fimc_err("%s: _qbuf_dmabuf error.\n",
 						__func__);
+					mutex_unlock(&ctrl->v4l2_lock);
 					return -ENODEV;
 				}
 				for (i = 0; i < vb->num_planes; i++) {
@@ -3180,6 +3182,7 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 					} else {
 						fimc_err("%s: Wrong sg value.\n",
 							__func__);
+						mutex_unlock(&ctrl->v4l2_lock);
 						return -ENODEV;
 					}
 				}
@@ -3201,7 +3204,6 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 #endif
 			}
 
-			spin_lock_irqsave(&ctrl->inq_lock, spin_flags);
 			fimc_hwset_output_buf_sequence(ctrl, idx, FIMC_FRAMECNT_SEQ_ENABLE);
 			cap->bufs[idx].state = VIDEOBUF_QUEUED;
 			if (ctrl->status == FIMC_BUFFER_STOP) {
@@ -3216,12 +3218,12 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 					ctrl->restart = true;
 				}
 			}
-			spin_unlock_irqrestore(&ctrl->inq_lock, spin_flags);
-
 		}
 	} else {
 		fimc_add_inqueue(ctrl, b->index);
 	}
+
+	mutex_unlock(&ctrl->v4l2_lock);
 
 	if (!cap->cacheable)
 		return 0;

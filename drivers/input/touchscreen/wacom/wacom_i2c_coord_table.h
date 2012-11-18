@@ -31,10 +31,6 @@
 #elif defined(CONFIG_MACH_T0_USA_VZW) \
 	|| defined(CONFIG_MACH_T0_USA_SPR)
 #include "table-t0vzw.h"
-#elif defined(CONFIG_MACH_T0_USA_USCC)
-#include "table-t0uscc.h"
-#elif defined(CONFIG_MACH_T0_CHN_CTC)
-#include "table-t0chnctc.h"
 #else
 /*CONFIG_MACH_T0_EUR_OPEN*/
 #include "table-t03g.h"

@@ -185,9 +185,6 @@ void __init s5p_cma_region_reserve(struct cma_region *regions_normal,
 							panic("memblock\n");
 #elif defined(CONFIG_MACH_GC1)
 					if (reg->start == 0x50900000) {
-						if (memblock_reserve(0x50900000,
-								0x700000))
-							panic("memblock\n");
 						if (memblock_reserve(0x53800000,
 								0x200000))
 							panic("memblock\n");

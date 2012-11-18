@@ -107,7 +107,6 @@ enum m9mo_prev_frmsize {
 	M9MO_PREVIEW_720P_DUAL,
 	M9MO_PREVIEW_VGA_DUAL,
 	M9MO_PREVIEW_QVGA_DUAL,
-	M9MO_PREVIEW_1440_1080,
 };
 
 enum m9mo_cap_frmsize {
@@ -240,14 +239,12 @@ struct m9mo_state {
 	enum v4l2_flash_mode flash_mode;
 	enum v4l2_scene_mode scene_mode;
 	int vt_mode;
-	int samsung_app;
 	int zoom;
 	int smart_zoom_mode;
 
 	int m9mo_fw_done;
 	int fw_info_done;
 
-	int start_cap_kind;
 	unsigned int fps;
 
 	int factory_down_check;
@@ -345,10 +342,6 @@ struct m9mo_state {
 	int preview_height;
 
 	int mburst_start;
-
-	int strobe_en;
-	int sharpness;
-	int saturation;
 };
 
 /* Category */
